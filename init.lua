@@ -24,11 +24,6 @@ keymap("n", "<C-k>", "<C-w>k", opts)
 keymap("n", "<C-l>", "<C-w>l", opts)
 keymap("n", "<S-h>", "<CMD>bprevious<CR>", opts)
 keymap("n", "<S-l>", "<CMD>bnext<CR>", opts)
-keymap("n", "<leader>t", ":term<CR>", opts)
-keymap("n", "<leader>e", ":e .<CR>", opts)
-keymap("n", "<leader>l", ":ls<CR>", opts)
-keymap("n", "<leader>b", ":b ", opts)
-keymap("n", "<leader>d", ":bd ", opts)
 
 -- Define highlight groups for different modes
 vim.api.nvim_set_hl(0, "StatusLineNormal", { fg = "#ffffff", bg = "#005f5f" })
@@ -54,112 +49,6 @@ vim.api.nvim_create_autocmd("InsertLeave", {
     callback = function()
         vim.api.nvim_set_hl(0, "StatusLine", { fg = "#ffffff", bg = "#005f5f" })
     end,
-})
-
--- Bootstrap lazy.nvim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not (vim.uv or vim.loop).fs_stat(lazypath) then
-    local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-    local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
-    if vim.v.shell_error ~= 0 then
-        vim.api.nvim_echo({
-            { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-            { out, "WarningMsg" },
-            { "\nPress any key to exit..." },
-        }, true, {})
-        vim.fn.getchar()
-        os.exit(1)
-    end
-end
-vim.opt.rtp:prepend(lazypath)
-
--- Setup lazy.nvim
-require("lazy").setup({
-    spec = {
-        {"hrsh7th/nvim-cmp",
-        config = function()
-            local cmp = require("cmp")
-            local luasnip = require("luasnip")
-
-            cmp.setup({
-                snippet = {
-                    expand = function(args)
-                        luasnip.lsp_expand(args.body) 
-                    end,
-                },
-                mapping =  {
-                    ["<CR>"] = cmp.mapping(function(fallback)
-                        if cmp.visible() then
-                            -- Check if Tab was pressed to confirm selection
-                            if cmp.get_selected_entry() then
-                                cmp.confirm({
-                                    select = true,
-                                })
-                            else
-                                fallback()  -- Fallback if no completion is selected
-                            end
-                        else
-                            fallback()  -- Fallback if completion is not visible
-                        end
-                    end),
-
-                    ["<Tab>"] = cmp.mapping(function(fallback)
-                        if cmp.visible() then
-                            cmp.select_next_item()
-                        elseif luasnip.locally_jumpable(1) then
-                            luasnip.jump(1)
-                        else
-                            fallback()
-                        end
-                    end, { "i", "s" }),
-
-                    ["<S-Tab>"] = cmp.mapping(function(fallback)
-                        if cmp.visible() then
-                            cmp.select_prev_item()
-                        elseif luasnip.locally_jumpable(-1) then
-                            luasnip.jump(-1)
-                        else
-                            fallback()
-                        end
-                    end, { "i", "s" }),
-
-                },
-                sources = cmp.config.sources({
-                    { name = "buffer" },
-                    { name = "path" },
-                    { name = "nvim_lsp" }
-                }),
-            })
-        end, 
-    },
-    "hrsh7th/cmp-buffer",
-    "L3MON4D3/LuaSnip",
-    "hrsh7th/cmp-path",
-    "hrsh7th/cmp-nvim-lsp",
-    {
-        "kylechui/nvim-surround",
-        version = "*", -- Use for stability; omit to use `main` branch for the latest features
-        event = "VeryLazy",
-        config = function()
-            require("nvim-surround").setup({
-                -- Configuration here, or leave empty to use defaults
-            })
-        end
-    },
-    {
-        "neovim/nvim-lspconfig",
-        config = function()
-            local lsp = require("lspconfig")
-            local capabilities = require("cmp_nvim_lsp").default_capabilities()
-            lsp.clangd.setup {
-                capabilities = capabilities,
-            }
-        end,
-    }
-},
-
--- automatically check for plugin updates
-checker = { enabled = false },
 })
 
 vim.cmd("syntax off")
