@@ -112,6 +112,13 @@ require("lazy").setup({
 	},
 })
 
+vim.api.nvim_create_autocmd("FileType", {
+  callback = function()
+    -- Only start if a parser exists for this language
+    pcall(vim.treesitter.start)
+  end,
+})
+
 vim.keymap.set("n", "<leader>e", "<Cmd>Neotree<CR>")
 local builtin = require("telescope.builtin")
 vim.keymap.set("n", "<leader>ff", builtin.find_files, { desc = "Telescope find files" })
